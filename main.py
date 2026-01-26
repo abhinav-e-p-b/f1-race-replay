@@ -71,6 +71,17 @@ def main(year=None, round_number=None, playback_speed=1, session_type='R', visib
     # Get circuit rotation
 
     circuit_rotation = get_circuit_rotation(session)
+    
+    # Prepare session info for display banner
+    session_info = {
+        'event_name': session.event.get('EventName', ''),
+        'circuit_name': session.event.get('Location', ''),  # Circuit location/name
+        'country': session.event.get('Country', ''),
+        'year': year,
+        'round': round_number,
+        'date': session.event.get('EventDate', '').strftime('%B %d, %Y') if session.event.get('EventDate') else '',
+        'total_laps': race_telemetry['total_laps']
+    }
 
     # Run the arcade replay
 
@@ -84,17 +95,18 @@ def main(year=None, round_number=None, playback_speed=1, session_type='R', visib
       title=f"{session.event['EventName']} - {'Sprint' if session_type == 'S' else 'Race'}",
       total_laps=race_telemetry['total_laps'],
       circuit_rotation=circuit_rotation,
-      visible_hud=visible_hud
-      ,ready_file=ready_file
+      visible_hud=visible_hud,
+      ready_file=ready_file,
+      session_info=session_info
     )
 
 if __name__ == "__main__":
 
-  if "--gui" in sys.argv:
-    app = QApplication(sys.argv)
-    win = RaceSelectionWindow()
-    win.show()
-    sys.exit(app.exec())
+  if "--cli" in sys.argv:
+    # Run the CLI
+
+    cli_load()
+    sys.exit(0)
 
   if "--year" in sys.argv:
     year_index = sys.argv.index("--year") + 1
@@ -132,8 +144,11 @@ if __name__ == "__main__":
         ready_file = sys.argv[idx]
 
     main(year, round_number, playback_speed, session_type=session_type, visible_hud=visible_hud, ready_file=ready_file)
+    sys.exit(0)
 
-  # Run the CLI
+  # Run the GUI
 
-  cli_load()
-  sys.exit(0)
+  app = QApplication(sys.argv)
+  win = RaceSelectionWindow()
+  win.show()
+  sys.exit(app.exec())
